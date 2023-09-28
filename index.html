@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET Request Example</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin: 40px; /* Добавляем внешние отступы для контейнера */
+            display: inline-block; /* Добавляем это свойство */
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        #wordForm {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        #wordInput {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #checkButton {
+            background-color: #F37021;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверить слово на наличие мата:</h1>
+        <form id="wordForm">
+            <label for="wordInput">Введите слово: </label>
+            <input type="text" id="wordInput">
+            <button type="button" id="checkButton">Проверить слово</button>
+        </form>
+
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const wordInput = document.getElementById("wordInput");
+        const checkButton = document.getElementById("checkButton");
+        const result = document.getElementById("result");
+
+        // Функция для выполнения GET-запроса с введенным словом
+        function checkWord() {
+            const word = wordInput.value;
+            if (!word) {
+                alert("Пожалуйста, введите слово.");
+                return;
+            }
+
+            const apiUrl = `https://api.motivtelecom.ru/v2/word-state?word=${encodeURIComponent(word)}`;
+            const xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        const responseJson = JSON.parse(xhr.responseText);
+                        const isBadWord = responseJson.hasOwnProperty("badWord") ? responseJson.badWord : null;
+                        const messages = isBadWord ? getBadWordMessages() : getNonBadWordMessages();
+                        const resultMessage = getRandomMessage(messages);
+
+                        result.textContent = resultMessage;
+                        result.style.display = "block";
+                    } else {
+                        console.error('There was a problem with the request:', xhr.status, xhr.statusText);
+                        alert('Произошла ошибка при выполнении запроса.');
+                    }
+                }
+            };
+
+            xhr.open('GET', apiUrl, true);
+            xhr.send();
+        }
+
+        // Функция для получения случайного сообщения из массива
+        function getRandomMessage(messages) {
+            const randomIndex = Math.floor(Math.random() * messages.length);
+            return messages[randomIndex];
+        }
+
+        // Функция для возврата сообщений о матерном слове
+        function getBadWordMessages() {
+            return [
+                'Ой-ой-ой, побойся бога, нельзя так ругаться!',
+                'Эй, это нехорошее слово!',
+                'Эй, стоп! Мы не разрешаем мат в этом месте!',
+                'Не то слово! Попробуй еще раз.'
+            ];
+        }
+
+        // Функция для возврата сообщений о нематерном слове
+        function getNonBadWordMessages() {
+            return [
+                'Отлично, это нематерное слово!',
+                'Ты великолепен в выборе нематерных слов!',
+                'Правильно, это не мат!',
+                'Ура, это нематерное слово!'
+            ];
+        }
+
+        // Обработчик события для нажатия кнопки "Проверить слово"
+        checkButton.addEventListener("click", checkWord);
+
+        // Обработчик события для нажатия клавиши Enter на поле ввода
+        wordInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                checkWord();
+            }
+        });
+    </script>
+</body>
+</html>
